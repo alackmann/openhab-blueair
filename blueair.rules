@@ -1,0 +1,96 @@
+/**
+    Parse the JSON blob stored in `BlueairInfo` Item and assign out the 
+    values to individual Items. Expand these as you see fit for the 
+    values you want to track and use.
+ */
+rule "Parse Blueair Info response to Items"
+when
+	Item BlueairInfo changed
+then
+    // get the value of the Exec Item that has been defined. It's JSON, so parse it
+    logInfo('blueair','Parsing BlueairInfo JSON')
+    var String blueairInfo = BlueairInfo.state.toString
+    val String fan_speed = transform("JSONPATH", "$.settings.fan_speed", blueairInfo )
+    val String led = transform("JSONPATH", "$.settings.brightness", blueairInfo )
+    var String uuid = transform("JSONPATH", "$.info.uuid", blueairInfo )
+
+    BlueairInfo_UUID.postUpdate(uuid)
+    BlueairSettings_FanSpeed.postUpdate(fan_speed)
+    BlueairSettings_LEDBrightness.postUpdate(led)
+ 
+end
+
+/**
+    When a user from a sitemap requests a FanSpeed change, trigger an API call to make it happen
+*/
+rule "Change fan speed"
+when
+    Item BlueairSettings_FanSpeed received command
+then
+    logInfo('blueair', 'Request to update Fan Speed detected')
+    logInfo('blueair', "Setting fan speed to: " + receivedCommand.toString)
+    // set the arguments
+    BlueAirFanSpeedArgs.sendCommand(receivedCommand.toString)
+	// Send the API request (via NodeJS exec)
+    BlueAirFanSpeedExec.sendCommand(ON)
+end
+
+/**
+    Turn up the fan on the Blue Air during the day - as long as there has not been any motion
+    in the room recently. 
+    - Re-check this every 5 mins.
+    - Only make a change if the current Fan Speed is 1 (Low), anything else is considered intentional (especially OFF)
+*/
+rule "During the day run the fan at top speed if not around"
+when
+	Time cron "0 */5 9-16 * * ?"
+then
+    val avgMotion = Motion_ParentsRoom_Chart.averageSince(now.minusMinutes(5))
+	logInfo("blueair", "Check if we should start the BlueAir. Motion: " + avgMotion + ". Fan Speed: " + BlueairSettings_FanSpeed.state.toString)
+    if( avgMotion == 0 || avgMotion == null) {
+        if( BlueairSettings_FanSpeed.state == 1) {
+            logInfo("blueair", "Hey, no-one seems about.. Let's crank up the BlueAir")
+            BlueAirFanSpeedArgs.sendCommand(3)
+            // Send the API request (via NodeJS exec)
+            BlueAirFanSpeedExec.sendCommand(ON)
+        } else {
+            logInfo('blueair','Fan speed not eligible, doing nothing... (' + BlueairSettings_FanSpeed.state.toString +')')
+        }
+    }
+end
+
+
+/**
+    The fan speed is quite loud at full tilt. Turn down the fan speed if movement detected.
+    It'll be turned back up by the cron task above if possible.
+*/
+rule "Turn down the fan speed if movement is detected"
+when
+    Item Motion_ParentsRoom changed to ON
+then
+    logInfo('blueair','Motion detected in Parents Room. Current Fan Speed: ' + BlueairSettings_FanSpeed.state.toString )
+    if(BlueairSettings_FanSpeed.state > 1) {
+        logInfo('blueair', 'Fan speed TOO high for people. Turning it down')
+        BlueAirFanSpeedArgs.sendCommand(1)
+	    // Send the API request (via NodeJS exec)
+        BlueAirFanSpeedExec.sendCommand(ON)
+    }
+end
+
+
+/**
+    At the end of the daytime period (when most family members start to get home)
+    turn the Blue Air back down to LOW
+*/
+rule "Turn down BlueAir at the end of the work day"
+when
+	Time cron "0 0 17 * * ?"
+then
+	logInfo("blueair", "Turn the BlueAir back down again")
+    if( BlueairSettings_FanSpeed.state == 3) {
+        logInfo("blueair", "BlueAir is running at full tilt. Let's turn it down...")
+        BlueAirFanSpeedArgs.sendCommand(1)
+        // Send the API request (via NodeJS exec)
+        BlueAirFanSpeedExec.sendCommand(ON)
+    }
+end
