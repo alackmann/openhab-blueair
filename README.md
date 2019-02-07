@@ -1,4 +1,4 @@
-# openhab-netgear
+# openhab-blueair
 
 An [OpenHab](https://www.openhab.org) collection of Items, Rules & Scripts that that allow you to control a [BlueAir](https://www.blueair.com/gb/air-purifiers) Air Purifier from OpenHAB rules and sitemaps.
 
