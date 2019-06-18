@@ -1,6 +1,6 @@
 {
   "name": "openhab-blueair",
-  "version": "1.0.1",
+  "version": "1.0.1-1",
   "description": "BlueAir plugin for OpenHAB: https://www.openhab.org",
   "license": "ISC",
   "keywords": [
@@ -10,10 +10,7 @@
     "blueair",
     "iot"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git://bitbucket.org/alackmann/openhab-blueair.git"
-  },
+  "repository": "bitbucket:alackmann/openhab-blueair",
   "bugs": {
     "url": "https://bitbucket.org/alackmann/openhab-blueair/issues"
   },
