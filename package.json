@@ -1,6 +1,6 @@
 {
   "name": "openhab-blueair",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "BlueAir plugin for OpenHAB: https://www.openhab.org",
   "license": "ISC",
   "keywords": [
