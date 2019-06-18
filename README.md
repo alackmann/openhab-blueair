@@ -56,7 +56,7 @@ Example Sitemap entries to allow Fan Speed to be managed and example of LED swit
 ```
 
 ### Rules
-Copy the `blueair.rules` file from `/etc/openhab2/scripts/node_modules/openhab-netgear/wifi.rules` into your rules folder (`/etc/openhab2/rules/`). Edit as you see fit.
+Copy the `blueair.rules` file from `/etc/openhab2/scripts/node_modules/openhab-blueair` into your rules folder (`/etc/openhab2/rules/`). Edit as you see fit.
 
 ## Troubleshooting
 To confirm the script is installed with all the pre-requisites and authentication is working, update the `config.json` file to `debug=1` and then from the command line of your OpenHAB server, run the following:
