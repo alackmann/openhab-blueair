@@ -7,7 +7,7 @@ class BlueAirDevice {
         this.username = config.username;
         this.apikey = "eyJhbGciOiJIUzI1NiJ9.eyJncmFudGVlIjoiYmx1ZWFpciIsImlhdCI6MTQ1MzEyNTYzMiwidmFsaWRpdHkiOi0xLCJqdGkiOiJkNmY3OGE0Yi1iMWNkLTRkZDgtOTA2Yi1kN2JkNzM0MTQ2NzQiLCJwZXJtaXNzaW9ucyI6WyJhbGwiXSwicXVvdGEiOi0xLCJyYXRlTGltaXQiOi0xfQ.CJsfWVzFKKDDA6rWdh-hjVVVE9S3d6Hu9BzXG9htWFw";
         this.password = config.password;
-        this.airPurifierIndex = config.airPurifierIndex;
+        this.airPurifierId = config.airPurifierId;
         this.base_API_url = "https://api.foobot.io/v2/user/" + this.username + "/homehost/";
         this.debug = (config.debug) ? true : false; 
         
@@ -153,17 +153,37 @@ class BlueAirDevice {
                     }
                     else {
                         var json = JSON.parse(body);
-                        var numberofdevices = '';
-                        this.log(json);
-                        this.log(json.length)
-                        if (this.airPurifierIndex < json.length) {
-                            this.deviceuuid = json[this.airPurifierIndex].uuid;
-                            this.devicename = json[this.airPurifierIndex].name;
-                            this.havedeviceID = 1;
-                            this.log("Got device ID"); 
-                            callback(null);
+                        this.log("Total number of devices found: " + json.length);
+                        if(this.airPurifierId.length == 1) {
+                            this.log("Trying to identify using Index method. Looking for index: " + this.airPurifierId);
+                            // get the airPurifier via an index value
+                            // not as reliable as MAC address 
+                            if (this.airPurifierId < json.length) {
+                                this.deviceuuid = json[this.airPurifierId].uuid;
+                                this.devicename = json[this.airPurifierId].name;
+                                this.havedeviceID = 1;
+                                this.log("Got device ID: " + this.deviceuuid); 
+                                callback(null);
+                            } else {
+                                this.log("airPurifierId specified is higher than number of air purifiers available");
+                            }
+                        } else if(this.airPurifierId.length == 12) {
+                            // assuming anything 12 chars is a MAC
+                            this.log("Trying to identify using Mac address: " + this.airPurifierId);
+                            var device = json.filter(function(item) {
+                                return item.mac == this.airPurifierId;        
+                            }.bind(this));
+                            if(device.length == 1) {
+                                this.deviceuuid = device[0].uuid;
+                                this.devicename = device[0].name;
+                                this.havedeviceID = 1;
+                                this.log("Got device ID: " + this.deviceuuid);
+                                callback(null);
+                            } else {
+                                this.log("No device for Mac address found. Failing..")    
+                            }
                         } else {
-                            this.log("airPurifierIndex specified is higher than number of air purifiers available");
+                            this.log("No index or Mac address for device found. Failing..")
                         }
                     }
                 }.bind(this));

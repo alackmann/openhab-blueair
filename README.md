@@ -4,8 +4,11 @@ An [OpenHab](https://www.openhab.org) collection of Items, Rules & Scripts that 
 
 As provided, the scripts allow you to adjust the fan speed, from OFF (0) to HIGH (3) and retrieve device information and settings, assigning them to OpenHAB Items as you see fit (requires Rule modifications)
 
+## Important
+`v1.1.0` of this library introduced a change to the command line arguments which will be a breaking change for current users. See below for the additional argument which provides support for multiple devices.
+
 ## Requirements
-* OpenHAB 2.x (tested on 2.3.0)
+* OpenHAB 2.x (tested on 2.3.0/2.4.0/2.5.0M1)
 * The OpenHAB [Exec Binding](https://www.openhab.org/addons/bindings/exec/)
 * NodeJS 8+
 * Yarn or NPM
@@ -26,10 +29,10 @@ You need to setup two *Things* in OpenHAB to connect the node script to OpenHAB.
 
 | Thing           | Command                                                                          | Transform   | Interval | Timeout | Autorun |
 | ----------------|----------------------------------------------------------------------------------|-------------|----------|---------|---------|
-| blueairInfo | /usr/bin/node /etc/openhab2/scripts/node_modules/openhab-blueair/index.js info | REGEX((.*)) | 120        | 30      | OFF     |
-| blueairFanSpeed      | /usr/bin/node /etc/openhab2/scripts/node_modules/openhab-blueair/index.js fan-speed %2$s   | REGEX((.*)) | 0       | 30      | OFF     |
+| blueairInfo | /usr/bin/node /etc/openhab2/scripts/node_modules/openhab-blueair/index.js \<index or mac\> info | REGEX((.*)) | 120        | 30      | OFF     |
+| blueairFanSpeed      | /usr/bin/node /etc/openhab2/scripts/node_modules/openhab-blueair/index.js \<index or mac\> fan-speed %2$s   | REGEX((.*)) | 0       | 30      | OFF     |
 
-You can do this via the web interface OR in the file system - however you normally do this should be fine.
+You can do this via the web interface OR in the file system - however you normally do this should be fine. Replace `<index or mac>` with either the device number you want to return (starts at 0 - enter this if you have only one device!) OR the mac address of your device (available in the BlueAir app, or in debug mode of this script). If you have multiple devices, these are now addressable in OpenHAB - just create more `Things`.
 
 ### Items
 Add the following Items to an existing or new file in `/etc/openhab2/items` folder
